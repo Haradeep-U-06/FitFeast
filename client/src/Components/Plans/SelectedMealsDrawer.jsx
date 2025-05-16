@@ -1,6 +1,6 @@
 import React from 'react';
 import { RiDeleteBin5Line } from "react-icons/ri";
-import './selectedMealsDrawer.css';
+import './SelectedMealsDrawer.css';
 
 function SelectedMealsDrawer({ isOpen, onClose, selectedMeals, onUpdateMeal, matchStatus, allOK }) {
   // Function to group meals by type

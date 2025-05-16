@@ -1,6 +1,6 @@
 import React from 'react';
 import { MdRestaurantMenu } from "react-icons/md";
-import './floatingActionButton.css';
+import './FloatingActionButton.css';
 
 function FloatingActionButton({ onClick, selectedMeals }) {
   const count = selectedMeals.length;

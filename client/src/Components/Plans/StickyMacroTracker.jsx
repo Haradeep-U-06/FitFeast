@@ -1,5 +1,5 @@
 import React from 'react';
-import './stickyMacroTracker.css';
+import './StickyMacroTracker.css';
 
 function StickyMacroTracker({ fl, selectedMeals, matchStatus }) {
   const { protein, carbs, fats } = matchStatus;
