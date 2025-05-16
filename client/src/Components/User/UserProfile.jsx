@@ -2,6 +2,7 @@ import { useContext ,useState, useEffect} from 'react'
 import { userContextObj } from '../../Contexts/UserContext'
 import { useForm} from "react-hook-form";
 import axios from 'axios'
+import { getBaseUrl } from '../../utils/config'
 import './UserProfile.css'
 
 function UserProfile() {
@@ -28,18 +29,18 @@ function UserProfile() {
 
     try {
       // Check if user exists in DB
-      const rep1 = await axios.get(`http://localhost:4000/user-api/users/${newuser.email}`);
+      const rep1 = await axios.get(`${getBaseUrl()}/user-api/users/${newuser.email}`);
       
       if (rep1.data.message === "User Not Found") {
           // If user does not exist, create a new user
-          await axios.post('http://localhost:4000/user-api/users', {...currentUser,height: Number(newuser.height),age: Number(newuser.age),weight: Number(newuser.weight),desiredweight: Number(newuser.desiredweight),gender: newuser.gender});
+          await axios.post(`${getBaseUrl()}/user-api/users`, {...currentUser,height: Number(newuser.height),age: Number(newuser.age),weight: Number(newuser.weight),desiredweight: Number(newuser.desiredweight),gender: newuser.gender});
       } else {
           // If user exists, update user details
-          await axios.put(`http://localhost:4000/user-api/users/${rep1.data.payload._id}`,{...currentUser,height: Number(newuser.height),age: Number(newuser.age),weight: Number(newuser.weight),desiredweight: Number(newuser.desiredweight),gender: newuser.gender});
+          await axios.put(`${getBaseUrl()}/user-api/users/${rep1.data.payload._id}`,{...currentUser,height: Number(newuser.height),age: Number(newuser.age),weight: Number(newuser.weight),desiredweight: Number(newuser.desiredweight),gender: newuser.gender});
       }
 
       // Fetch updated user data
-      const rep2 = await axios.get(`http://localhost:4000/user-api/users/${newuser.email}`);
+      const rep2 = await axios.get(`${getBaseUrl()}/user-api/users/${newuser.email}`);
       setCurrentUser(rep2.data.payload)
 
       // console.log("Updated User Data:", currentUser);

@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userContextObj } from '../../Contexts/UserContext';
 import axios from 'axios';
+import { getBaseUrl } from '../../utils/config';
 import './Checkout.css';
 
 function Checkout() {
@@ -109,7 +110,7 @@ function Checkout() {
             };
             
             // Update user in database
-            await axios.put(`http://localhost:4000/user-api/users/${currentUser._id}`, updatedUser);
+            await axios.put(`${getBaseUrl()}/user-api/users/${currentUser._id}`, updatedUser);
             
             // Update local state
             setCurrentUser(updatedUser);

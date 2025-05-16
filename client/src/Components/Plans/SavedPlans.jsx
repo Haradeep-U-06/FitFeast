@@ -1,6 +1,7 @@
 import React, {useEffect, useState, useContext} from 'react';
 import { userContextObj } from '../../Contexts/UserContext';
 import axios from 'axios';
+import { getBaseUrl } from '../../utils/config';
 import './SavedPlans.css'; // Will create this CSS file
 
 function SavedPlan() {
@@ -12,7 +13,7 @@ function SavedPlan() {
     useEffect(() => {
         const fetchPlan = async () => {
             try {
-                const res = await axios.get('http://localhost:4000/plan-api/plan')
+                const res = await axios.get(`${getBaseUrl()}/plan-api/plan`)
                 setPlans(res.data.payload.filter((plan) => plan.userId === currentUser._id));
             } catch(err) {
                 console.log("Error fetching plans:", err);

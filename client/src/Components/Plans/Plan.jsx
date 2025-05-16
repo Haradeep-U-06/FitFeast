@@ -4,6 +4,7 @@ import { userContextObj } from '../../Contexts/UserContext';
 import { useForm } from "react-hook-form";
 import Filter from './Filter';
 import axios from 'axios';
+import { getBaseUrl } from '../../utils/config';
 import MealPlanner from './MealPlanner';
 import StickyMacroTracker from './StickyMacroTracker';
 import MealDisplay from './MealDisplay';
@@ -174,7 +175,7 @@ function Plan() {
         };
         
         try {
-            const res = await axios.post('http://localhost:4000/plan-api/plans', planData);
+            const res = await axios.post(`${getBaseUrl()}/plan-api/plans`, planData);
             if (res.status === 201) setPlanSaved(true);
         } catch(err) {
             console.log("Error saving plan: ", err);

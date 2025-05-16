@@ -1,6 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { userContextObj } from '../../Contexts/UserContext';
 import axios from 'axios';
+import { getBaseUrl } from '../../utils/config';
 import './CartProduct.css';
 
 function CartProduct({ p }) {
@@ -27,7 +28,7 @@ function CartProduct({ p }) {
         
         try {
             // Update in database
-            await axios.put(`http://localhost:4000/user-api/users/${currentUser._id}`, {
+            await axios.put(`${getBaseUrl()}/user-api/users/${currentUser._id}`, {
                 ...currentUser,
                 userProducts: updatedProducts,
                 cost: newCost
@@ -59,7 +60,7 @@ function CartProduct({ p }) {
             );
             
             // Update in database
-            await axios.put(`http://localhost:4000/user-api/users/${currentUser._id}`, {
+            await axios.put(`${getBaseUrl()}/user-api/users/${currentUser._id}`, {
                 ...currentUser,
                 userProducts: updatedProducts,
                 cost: newCost

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { userContextObj } from '../../Contexts/UserContext';
 import Product from './Product';
 import axios from 'axios';
+import { getBaseUrl } from '../../utils/config';
 import './Products.css';
 
 function Products() {
@@ -15,7 +16,7 @@ function Products() {
   useEffect(() => {
     setLoading(true);
     axios
-      .get(`http://localhost:4000/product-api/product`)
+      .get(`${getBaseUrl()}/product-api/product`)
       .then((res) => {
         setProducts(res.data.payload);
         setLoading(false);

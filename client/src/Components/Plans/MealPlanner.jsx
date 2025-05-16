@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { filtercontextObj } from '../../Contexts/FilterContext';
 import axios from 'axios';
+import { getBaseUrl } from '../../utils/config';
 
 const MealPlanner = {
   allMeals: [],
@@ -9,7 +10,7 @@ const MealPlanner = {
   loadAllMeals: async () => {
     if (MealPlanner.allMeals.length === 0) {
       try {
-        const response = await axios.get('http://localhost:4000/food-api/meal');
+        const response = await axios.get(`${getBaseUrl()}/food-api/meal`);
         MealPlanner.allMeals = response.data.payload || [];
       } catch (error) {
         console.error("Error loading meals:", error);

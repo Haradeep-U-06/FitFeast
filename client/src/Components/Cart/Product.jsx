@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { userContextObj } from '../../Contexts/UserContext';
 import axios from 'axios';
+import { getBaseUrl } from '../../utils/config';
 import './Product.css';
 
 function Product({ p }) {
@@ -54,7 +55,7 @@ function Product({ p }) {
       );
       
       // Update in database
-      await axios.put(`http://localhost:4000/user-api/users/${currentUser._id}`, {
+      await axios.put(`${getBaseUrl()}/user-api/users/${currentUser._id}`, {
         ...currentUser,
         userProducts: updatedProducts,
         cost: newCost
@@ -82,7 +83,7 @@ function Product({ p }) {
       );
       
       // Update in database
-      await axios.put(`http://localhost:4000/user-api/users/${currentUser._id}`, {
+      await axios.put(`${getBaseUrl()}/user-api/users/${currentUser._id}`, {
         ...currentUser,
         userProducts: updatedProducts,
         cost: newCost
@@ -111,14 +112,14 @@ function Product({ p }) {
     
     try {
       // Check if user exists
-      const userResponse = await axios.get(`http://localhost:4000/user-api/users/${currentUser.email}`);
+      const userResponse = await axios.get(`${getBaseUrl()}/user-api/users/${currentUser.email}`);
       
       if (userResponse.data.message === "User Not Found") {
-        await axios.post('http://localhost:4000/user-api/users', {...currentUser});
+        await axios.post(`${getBaseUrl()}/user-api/users`, {...currentUser});
       }
       
       // Get latest user data
-      const rep3 = await axios.get(`http://localhost:4000/user-api/users/${currentUser.email}`);
+      const rep3 = await axios.get(`${getBaseUrl()}/user-api/users/${currentUser.email}`);
       
       // CHANGED: Add product with initial quantity of 1 instead of 0
       const productWithQuantity = { ...p, quantity: 1 };
@@ -128,7 +129,7 @@ function Product({ p }) {
       const newCost = rep3.data.payload.cost + p.price;
       
       // Update in database
-      await axios.put(`http://localhost:4000/user-api/users/${rep3.data.payload._id}`, {
+      await axios.put(`${getBaseUrl()}/user-api/users/${rep3.data.payload._id}`, {
         ...currentUser, 
         userProducts: updatedProducts,
         cost: newCost

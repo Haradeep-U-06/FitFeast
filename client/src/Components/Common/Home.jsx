@@ -4,6 +4,7 @@ import {useUser} from '@clerk/clerk-react'
 import {useNavigate} from 'react-router-dom'
 import heroImage from "../../assets/image.png";
 import axios from 'axios'
+import { getBaseUrl } from '../../utils/config'
 import './Home.css'
 
 function Home() {
@@ -21,7 +22,7 @@ function Home() {
   useEffect(()=>{
     
     if (isSignedIn === true){
-      axios.get(`http://localhost:4000/user-api/users/${user?.emailAddresses[0].emailAddress}`)
+      axios.get(`${getBaseUrl()}/user-api/users/${user?.emailAddresses[0].emailAddress}`)
       .then((rep) => {
         if (rep.data.message === "User Not Found") {
           setCurrentUser({
