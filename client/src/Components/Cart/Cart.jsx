@@ -1,16 +1,46 @@
-import React, { useEffect, useState } from 'react'
-import { useContext } from 'react';
+import React, { useEffect, useState, useContext } from 'react'
 import { userContextObj } from '../../Contexts/UserContext'
 import CartProduct from './CartProduct';
 import { Link } from 'react-router-dom';
-import {useNavigate} from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios';
+import { getBaseUrl } from '../../utils/config';
 import './Cart.css';
 
 function Cart() {
     const { currentUser, setCurrentUser } = useContext(userContextObj);
     const [totalCost, setTotalCost] = useState(0);
-    const userProd = currentUser.userProducts || [];
-    const navigate = useNavigate()
+    const [isLoading, setIsLoading] = useState(true);
+    const userProd = currentUser?.userProducts || [];
+    const navigate = useNavigate();
+    
+    // Ensure user data is fully loaded with the most current cart
+    useEffect(() => {
+        const fetchUserData = async () => {
+            if (!currentUser || !currentUser.email) {
+                setIsLoading(false);
+                return;
+            }
+            
+            try {
+                // Get the most up-to-date user data
+                const response = await axios.get(`${getBaseUrl()}/user-api/users/${currentUser.email}`);
+                
+                if (response.data && response.data.payload) {
+                    // Only update if we get valid data back and if the data is different
+                    if (JSON.stringify(response.data.payload) !== JSON.stringify(currentUser)) {
+                        setCurrentUser(response.data.payload);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        fetchUserData();
+    }, [currentUser.email]);
     
     // Calculate total cost correctly based on current cart items
     useEffect(() => {
@@ -21,13 +51,30 @@ function Cart() {
         setTotalCost(calculatedTotal);
         
         // Update the cost in currentUser if it's different
-        if (calculatedTotal !== currentUser.cost) {
+        if (calculatedTotal !== currentUser.cost && currentUser._id) {
+            // Only update the database if we have a valid user ID
+            axios.put(`${getBaseUrl()}/user-api/users/${currentUser._id}`, {
+                ...currentUser,
+                cost: calculatedTotal
+            }).catch(err => console.error("Error updating cost:", err));
+            
             setCurrentUser({
                 ...currentUser,
                 cost: calculatedTotal
             });
         }
-    }, [userProd, currentUser.cost]);
+    }, [userProd]);
+    
+    if (isLoading) {
+        return (
+            <div className="loading-container">
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+                <p>Loading your cart...</p>
+            </div>
+        );
+    }
     
     return (
         <div className="cart-page">
@@ -80,10 +127,6 @@ function Cart() {
                                 <button className="checkout-btn" onClick={() => navigate('/checkout')}>
                                     Proceed to Checkout
                                 </button>
-                                {/* <Link to="/checkout" className="checkout-btn">
-                                    Proceed to Checkout
-                                </Link> */}
-
                                 
                                 <Link to="/products" className="continue-shopping">
                                     <i className="bi bi-arrow-left"></i> Continue Shopping

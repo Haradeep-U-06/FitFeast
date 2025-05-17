@@ -8,10 +8,10 @@ import { getBaseUrl } from '../../utils/config'
 import './Home.css'
 
 function Home() {
-  const {currentUser , setCurrentUser}=useContext(userContextObj)
-  // console.log(currentUser)
-  const {isSignedIn , user , isLoaded}=useUser()
-  const [error , setError]=useState("")
+  const {currentUser, setCurrentUser} = useContext(userContextObj)
+  const {isSignedIn, user, isLoaded} = useUser()
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false) // Add loading state
   const navigate = useNavigate()
   const [featuredProducts, setFeaturedProducts] = useState([
     { id: 1, name: "Premium Package", price: "$99.99", image: "https://via.placeholder.com/300" },
@@ -19,30 +19,68 @@ function Home() {
     { id: 3, name: "Basic Package", price: "$29.99", image: "https://via.placeholder.com/300" }
   ])
 
-  useEffect(()=>{
-    
-    if (isSignedIn === true){
-      axios.get(`${getBaseUrl()}/user-api/users/${user?.emailAddresses[0].emailAddress}`)
-      .then((rep) => {
-        if (rep.data.message === "User Not Found") {
-          setCurrentUser({
-            ...currentUser,
-            firstName:user?.firstName,
-            lastName:user?.lastName,
-            email:user?.emailAddresses[0].emailAddress,
-            profileImageUrl:user?.imageUrl
-          })
-          
-        } else {
-          setCurrentUser(rep.data.payload)
-        }
-        // console.log(currentUser)
-      })
-      .catch(err=>console.log("Some Error occured", err))
+  useEffect(() => {
+    if (isSignedIn === true) {
+      setLoading(true);
       
+      // Get user email from Clerk
+      const userEmail = user?.emailAddresses[0].emailAddress;
       
+      if (!userEmail) {
+        setLoading(false);
+        return;
+      }
+      
+      axios.get(`${getBaseUrl()}/user-api/users/${userEmail}`)
+        .then(async (rep) => {
+          if (rep.data.message === "User Not Found") {
+            // Create new user object
+            const newUserData = {
+              firstName: user?.firstName || "",
+              lastName: user?.lastName || "",
+              email: userEmail,
+              profileImageUrl: user?.imageUrl || "",
+              height: 0,
+              weight: 0,
+              age: 0,
+              gender: "",
+              desiredweight: 0,
+              userProducts: [],
+              cost: 0
+            };
+            
+            try {
+              // Create user in database first
+              const createResponse = await axios.post(`${getBaseUrl()}/user-api/users`, newUserData);
+              
+              // If successful, set the user with the returned data (including _id)
+              if (createResponse.data && createResponse.data.payload) {
+                setCurrentUser(createResponse.data.payload);
+              } else {
+                // If we don't get a proper response, fetch the user again
+                const fetchNewUser = await axios.get(`${getBaseUrl()}/user-api/users/${userEmail}`);
+                if (fetchNewUser.data && fetchNewUser.data.payload) {
+                  setCurrentUser(fetchNewUser.data.payload);
+                } else {
+                  setCurrentUser(newUserData);
+                }
+              }
+            } catch (err) {
+              console.log("Error creating new user:", err);
+              setCurrentUser(newUserData);
+            }
+          } else {
+            // User exists, set the user data from response
+            setCurrentUser(rep.data.payload);
+          }
+          setLoading(false);
+        })
+        .catch(err => {
+          console.log("Some Error occurred", err);
+          setLoading(false);
+        });
     }
-  },[isLoaded])
+  }, [isLoaded, isSignedIn]);
 
   const handleViewProducts = () => {
     navigate('/products');

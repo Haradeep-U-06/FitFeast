@@ -111,42 +111,85 @@ function Product({ p }) {
     setLoading(true);
     
     try {
-      // Check if user exists
-      const userResponse = await axios.get(`${getBaseUrl()}/user-api/users/${currentUser.email}`);
-      
-      if (userResponse.data.message === "User Not Found") {
-        await axios.post(`${getBaseUrl()}/user-api/users`, {...currentUser});
+      // If user doesn't have an _id, we need to make sure they're created first
+      if (!currentUser._id) {
+        // Try to fetch the user first to see if they exist
+        const userCheckResponse = await axios.get(`${getBaseUrl()}/user-api/users/${currentUser.email}`);
+        
+        if (userCheckResponse.data.message === "User Not Found") {
+          // Create the user if they don't exist
+          const createUserResponse = await axios.post(`${getBaseUrl()}/user-api/users`, {
+            ...currentUser,
+            userProducts: [], // Initialize with empty array
+            cost: 0
+          });
+          
+          // Update current user with the newly created user (including _id)
+          if (createUserResponse.data && createUserResponse.data.payload) {
+            setCurrentUser(createUserResponse.data.payload);
+          }
+        } else if (userCheckResponse.data && userCheckResponse.data.payload) {
+          // Update current user with the fetched user data
+          setCurrentUser(userCheckResponse.data.payload);
+        }
       }
       
-      // Get latest user data
-      const rep3 = await axios.get(`${getBaseUrl()}/user-api/users/${currentUser.email}`);
+      // Get latest user data after ensuring user exists
+      const updatedUserResponse = await axios.get(`${getBaseUrl()}/user-api/users/${currentUser.email}`);
       
-      // CHANGED: Add product with initial quantity of 1 instead of 0
-      const productWithQuantity = { ...p, quantity: 1 };
-      const updatedProducts = [...rep3.data.payload.userProducts, productWithQuantity];
+      if (!updatedUserResponse.data || !updatedUserResponse.data.payload) {
+        throw new Error("Could not retrieve user data");
+      }
       
-      // CHANGED: Update cost to include the price of the added item
-      const newCost = rep3.data.payload.cost + p.price;
+      const userData = updatedUserResponse.data.payload;
       
-      // Update in database
-      await axios.put(`${getBaseUrl()}/user-api/users/${rep3.data.payload._id}`, {
-        ...currentUser, 
+      // Check if product already exists in cart
+      const existingProductIndex = userData.userProducts.findIndex(
+        item => item._id === p._id || item.id === p.id
+      );
+      
+      let updatedProducts;
+      let newCost;
+      
+      if (existingProductIndex !== -1) {
+        // Update quantity if product already exists
+        updatedProducts = [...userData.userProducts];
+        updatedProducts[existingProductIndex] = {
+          ...updatedProducts[existingProductIndex],
+          quantity: (updatedProducts[existingProductIndex].quantity || 1) + 1
+        };
+        
+        newCost = updatedProducts.reduce(
+          (total, item) => total + (item.price * (item.quantity || 1)), 0
+        );
+      } else {
+        // Add new product with quantity 1
+        const productWithQuantity = { ...p, quantity: 1 };
+        updatedProducts = [...userData.userProducts, productWithQuantity];
+        
+        // Calculate new total cost
+        newCost = userData.cost + p.price;
+      }
+      
+      // Update in database using the _id from the fetched user data
+      await axios.put(`${getBaseUrl()}/user-api/users/${userData._id}`, {
+        ...userData, 
         userProducts: updatedProducts,
         cost: newCost
       });
       
-      // Update state
+      // Update local state
       setCurrentUser({
-        ...currentUser,
+        ...userData,
         userProducts: updatedProducts,
         cost: newCost
       });
       
       setIsInCart(true);
-      // CHANGED: Set quantity to 1 instead of 0
       setQuantity(1);
     } catch (error) {
       console.error("Error adding to cart:", error);
+      alert("There was a problem adding this item to your cart. Please try again.");
     } finally {
       setLoading(false);
     }

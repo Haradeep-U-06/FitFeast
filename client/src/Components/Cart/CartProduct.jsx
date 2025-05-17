@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { userContextObj } from '../../Contexts/UserContext';
 import axios from 'axios';
 import { getBaseUrl } from '../../utils/config';
@@ -8,25 +8,37 @@ function CartProduct({ p }) {
     const { currentUser, setCurrentUser } = useContext(userContextObj);
     const [quantity, setQuantity] = useState(p.quantity || 1);
     const [isRemoving, setIsRemoving] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
+    
+    // Update local quantity when prop changes
+    useEffect(() => {
+        setQuantity(p.quantity || 1);
+    }, [p.quantity]);
 
     const updateQuantity = async (newQuantity) => {
         if (newQuantity < 1) return;
         
+        setIsUpdating(true);
         setQuantity(newQuantity);
         
-        // Update the product quantity in the cart
-        const updatedProducts = currentUser.userProducts.map(item => 
-            (item._id === p._id || item.id === p.id) 
-                ? { ...item, quantity: newQuantity } 
-                : item
-        );
-        
-        // Calculate new total cost
-        const newCost = updatedProducts.reduce(
-            (total, item) => total + (item.price * (item.quantity || 1)), 0
-        );
-        
         try {
+            // Ensure user exists and has an _id
+            if (!currentUser || !currentUser._id) {
+                throw new Error("User not properly initialized");
+            }
+            
+            // Update the product quantity in the cart
+            const updatedProducts = currentUser.userProducts.map(item => 
+                (item._id === p._id || item.id === p.id) 
+                    ? { ...item, quantity: newQuantity } 
+                    : item
+            );
+            
+            // Calculate new total cost
+            const newCost = updatedProducts.reduce(
+                (total, item) => total + (item.price * (item.quantity || 1)), 0
+            );
+            
             // Update in database
             await axios.put(`${getBaseUrl()}/user-api/users/${currentUser._id}`, {
                 ...currentUser,
@@ -42,6 +54,11 @@ function CartProduct({ p }) {
             });
         } catch (error) {
             console.error("Error updating quantity:", error);
+            // Reset quantity if update fails
+            setQuantity(p.quantity || 1);
+            alert("Failed to update quantity. Please try again.");
+        } finally {
+            setIsUpdating(false);
         }
     };
 
@@ -49,9 +66,14 @@ function CartProduct({ p }) {
         setIsRemoving(true);
         
         try {
+            // Ensure user exists and has an _id
+            if (!currentUser || !currentUser._id) {
+                throw new Error("User not properly initialized");
+            }
+            
             // Filter out the current product
             const updatedProducts = currentUser.userProducts.filter(item => 
-                item._id !== p._id && item.id !== p.id
+                !(item._id === p._id || item.id === p.id)
             );
             
             // Calculate new cost
@@ -75,6 +97,7 @@ function CartProduct({ p }) {
         } catch (error) {
             console.error("Error removing item:", error);
             setIsRemoving(false);
+            alert("Failed to remove item. Please try again.");
         }
     };
 
@@ -97,9 +120,9 @@ function CartProduct({ p }) {
                         <button 
                             className="cart-quantity-btn decrease" 
                             onClick={() => updateQuantity(quantity - 1)}
-                            disabled={quantity <= 1}
+                            disabled={quantity <= 1 || isUpdating}
                         >
-                            <i className="bi bi-dash">-</i>
+                            {isUpdating ? <span className="spinner-border spinner-border-sm"></span> : <i className="bi bi-dash">-</i>}
                         </button>
                         
                         <span className="cart-quantity-value">{quantity}</span>
@@ -107,8 +130,9 @@ function CartProduct({ p }) {
                         <button 
                             className="cart-quantity-btn increase" 
                             onClick={() => updateQuantity(quantity + 1)}
+                            disabled={isUpdating}
                         >
-                            <i className="bi bi-plus">+</i>
+                            {isUpdating ? <span className="spinner-border spinner-border-sm"></span> : <i className="bi bi-plus">+</i>}
                         </button>
                     </div>
                 </div>
