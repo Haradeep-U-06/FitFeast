@@ -68,7 +68,7 @@ function Footer() {
 
         <div className="footer-bottom">
           <div className="copyright">
-            &copy; {new Date().getFullYear()} Your Company Name. All rights reserved.
+            &copy; {new Date().getFullYear()} Fit Feast. All rights reserved.
           </div>
           <div className="footer-bottom-links">
             <Link to="#" className="footer-bottom-link">Privacy Policy</Link>
