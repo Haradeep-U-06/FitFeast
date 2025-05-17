@@ -207,7 +207,7 @@ function Product({ p }) {
         <p className="product-description">{p.description}</p>
         
         <div className="product-meta">
-          <div className="product-price">${p.price.toFixed(2)}</div>
+          <div className="product-price">₹{p.price.toFixed(2)}</div>
         </div>
         
         <div className="product-actions">
