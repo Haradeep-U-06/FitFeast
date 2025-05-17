@@ -80,7 +80,7 @@ function UserProfile() {
           })}
           id="lastName"
           className="form-control"
-        disabled/>
+        />
       </div>
       <div className="email">
       <label htmlFor="email" className="form-label">
